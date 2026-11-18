@@ -108,6 +108,649 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attempts/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Envía respuestas del simulacro y calcula el puntaje en el servidor
+         * @description Cruza las respuestas contra `correct_key` en Postgres, guarda el intento y devuelve el desglose total, por materia y por pregunta.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Mapa questionId -> opción marcada (ej: {"mat-001": "B"}). */
+                        answers: {
+                            [key: string]: string;
+                        };
+                        /** @description Lista completa de IDs de preguntas del examen (incluidas las no respondidas). */
+                        questionIds?: string[];
+                        /** @description Timestamp (ms) o fecha ISO de inicio del intento. */
+                        startTime?: number | string;
+                        /** @description Timestamp (ms) o fecha ISO de finalización del intento. */
+                        endTime?: number | string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                /** Format: uuid */
+                                attemptId: string;
+                                userId: string | null;
+                                /** @enum {string} */
+                                status: "in_progress" | "completed";
+                                score: number;
+                                totalQuestions: number;
+                                answeredCount: number;
+                                unansweredCount: number;
+                                percentage: number;
+                                startTime: string;
+                                endTime: string;
+                                bySubject: {
+                                    /** Format: uuid */
+                                    subjectId: string;
+                                    subjectCode: string;
+                                    subjectName: string;
+                                    total: number;
+                                    correct: number;
+                                    percentage: number;
+                                }[];
+                                results: {
+                                    questionId: string;
+                                    /** Format: uuid */
+                                    subjectId: string;
+                                    subjectCode: string;
+                                    subjectName: string;
+                                    topic: string;
+                                    statementMd: string;
+                                    imageUrl: string | null;
+                                    options: {
+                                        key: string;
+                                        text: string;
+                                    }[];
+                                    difficulty: string | null;
+                                    selectedKey: string | null;
+                                    correctKey: string;
+                                    isCorrect: boolean;
+                                    explanationMd: string | null;
+                                    procedureMd: string | null;
+                                    videoUrl: string | null;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Historial de intentos del usuario autenticado
+         * @description Devuelve los simulacros realizados por el usuario autenticado ordenados del más reciente al más antiguo.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                score: number;
+                                totalQuestions: number;
+                                percentage: number;
+                                /** @enum {string} */
+                                status: "in_progress" | "completed";
+                                startTime: string;
+                                endTime: string;
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attempts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Detalle y revisión completa de un intento pasado
+         * @description Devuelve el puntaje, desglose por materia y revisión pregunta por pregunta de un intento perteneciente al usuario autenticado.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description UUID del intento registrado. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                /** Format: uuid */
+                                attemptId: string;
+                                userId: string | null;
+                                /** @enum {string} */
+                                status: "in_progress" | "completed";
+                                score: number;
+                                totalQuestions: number;
+                                answeredCount: number;
+                                unansweredCount: number;
+                                percentage: number;
+                                startTime: string;
+                                endTime: string;
+                                bySubject: {
+                                    /** Format: uuid */
+                                    subjectId: string;
+                                    subjectCode: string;
+                                    subjectName: string;
+                                    total: number;
+                                    correct: number;
+                                    percentage: number;
+                                }[];
+                                results: {
+                                    questionId: string;
+                                    /** Format: uuid */
+                                    subjectId: string;
+                                    subjectCode: string;
+                                    subjectName: string;
+                                    topic: string;
+                                    statementMd: string;
+                                    imageUrl: string | null;
+                                    options: {
+                                        key: string;
+                                        text: string;
+                                    }[];
+                                    difficulty: string | null;
+                                    selectedKey: string | null;
+                                    correctKey: string;
+                                    isCorrect: boolean;
+                                    explanationMd: string | null;
+                                    procedureMd: string | null;
+                                    videoUrl: string | null;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stats/weak-points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Puntos débiles por tema y pregunta del usuario autenticado
+         * @description Agrupa todas las respuestas históricas en `attempt_answers` para detectar los temas y preguntas con mayor porcentaje y frecuencia de error.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                totalAnswersAnalyzed: number;
+                                totalWrongAnswers: number;
+                                failedQuestionIds: string[];
+                                byTopic: {
+                                    /** Format: uuid */
+                                    subjectId: string;
+                                    subjectCode: string;
+                                    subjectName: string;
+                                    topic: string;
+                                    totalSeen: number;
+                                    wrongCount: number;
+                                    correctCount: number;
+                                    errorRate: number;
+                                    failedQuestionIds: string[];
+                                }[];
+                                byQuestion: {
+                                    questionId: string;
+                                    /** Format: uuid */
+                                    subjectId: string;
+                                    subjectCode: string;
+                                    subjectName: string;
+                                    topic: string;
+                                    statementMd: string;
+                                    totalSeen: number;
+                                    wrongCount: number;
+                                    errorRate: number;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stats/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recomendaciones de estudio generadas por IA a partir de los puntos débiles
+         * @description Reutiliza el cálculo de `/api/stats/weak-points` y pide a Gemini hasta 3 consejos de estudio accionables en Markdown. Si el usuario no tiene suficiente historial, devuelve `hasEnoughData: false` sin consumir cuota de IA.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                /** @description Hasta 3 consejos de estudio accionables en Markdown generados por IA. */
+                                recommendationsMd: string;
+                                /** @description false si el usuario todavía no tiene suficiente historial de errores para recomendaciones personalizadas. */
+                                hasEnoughData: boolean;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tutor IA CUP con streaming SSE (Gemini)
+         * @description Responde consultas pedagógicas paso a paso en formato Server-Sent Events (`text/event-stream`). Si recibe `questionId`, inyecta el contexto oficial de Postgres al System Prompt y reutiliza el caché inicial para ahorrar tokens.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Historial conversacional entre estudiante y tutor. */
+                        messages: {
+                            /** @enum {string} */
+                            role: "user" | "assistant";
+                            content: string;
+                        }[];
+                        /** @description ID opcional de la pregunta para inyectar su contexto oficial en el System Prompt. */
+                        questionId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Stream Server-Sent Events (text/event-stream) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {

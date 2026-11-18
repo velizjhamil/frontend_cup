@@ -1,7 +1,11 @@
 import { shallow } from 'zustand/shallow';
 import { db, type PersistedSimulation } from './db';
-import { useSimulationStore, type RestoredSimulation } from '../store/useSimulationStore';
-import type { ExamQuestion, SubjectQuota } from './examGenerator';
+import { OFFICIAL_EXAM_SECONDS, type ExamQuestion, type SubjectQuota } from './examGenerator';
+import {
+  useSimulationStore,
+  type RestoredSimulation,
+  type SimulationMode,
+} from '../store/useSimulationStore';
 
 /** Única fila de la tabla `simulations`: no hay historial local, eso es del backend. */
 const ACTIVE_ID: PersistedSimulation['id'] = 'active';
@@ -9,6 +13,9 @@ const ACTIVE_ID: PersistedSimulation['id'] = 'active';
 /** Lo que observamos del store para decidir si hay que escribir en IndexedDB. */
 type PersistedSlice = {
   isHydrated: boolean;
+  mode: SimulationMode;
+  examTitle: string;
+  durationSeconds: number;
   status: PersistedSimulation['status'] | 'idle';
   questions: ExamQuestion[];
   answers: Record<string, string>;
@@ -17,7 +24,7 @@ type PersistedSlice = {
   shortfall: number;
   /**
    * Mientras corre vale `null` a propósito: el tiempo se deriva de `startTime`,
-   * así que un tick por segundo no debe escribir en disco (serían 2400 escrituras).
+   * así que un tick por segundo no debe escribir en disco (serían 3600 escrituras).
    */
   timeRemaining: number | null;
 };
@@ -39,6 +46,9 @@ export async function loadPersistedSimulation(): Promise<RestoredSimulation | nu
     if (!saved || saved.questions.length === 0) return null;
 
     return {
+      mode: saved.mode ?? 'official',
+      examTitle: saved.examTitle ?? 'Simulacro Oficial',
+      durationSeconds: saved.durationSeconds ?? OFFICIAL_EXAM_SECONDS,
       status: saved.status,
       questions: saved.questions,
       answers: saved.answers,
@@ -79,6 +89,9 @@ async function persistSlice(slice: PersistedSlice): Promise<void> {
 
   await db.simulations.put({
     id: ACTIVE_ID,
+    mode: slice.mode,
+    examTitle: slice.examTitle,
+    durationSeconds: slice.durationSeconds,
     status: slice.status,
     questions: slice.questions,
     answers: slice.answers,
@@ -88,6 +101,15 @@ async function persistSlice(slice: PersistedSlice): Promise<void> {
     shortfall: slice.shortfall,
     savedAt: Date.now(),
   });
+}
+
+/** Borra explícitamente el simulacro activo en IndexedDB al calificarlo. */
+export async function clearPersistedSimulation(): Promise<void> {
+  try {
+    await db.simulations.delete(ACTIVE_ID);
+  } catch (error) {
+    console.error('[simulación] No se pudo limpiar el simulacro en IndexedDB:', error);
+  }
 }
 
 /**
@@ -101,6 +123,9 @@ export function startSimulationPersistence(): () => void {
   return useSimulationStore.subscribe(
     (state): PersistedSlice => ({
       isHydrated: state.isHydrated,
+      mode: state.mode,
+      examTitle: state.examTitle,
+      durationSeconds: state.durationSeconds,
       status: state.status,
       questions: state.questions,
       answers: state.answers,
