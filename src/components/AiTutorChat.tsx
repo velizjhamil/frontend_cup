@@ -120,7 +120,7 @@ export function AiTutorChat(props: AiTutorChatProps) {
           <button
             type="button"
             onClick={handleToggleOpen}
-            className="inline-flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded-xl border border-secondary bg-muted text-primary hover:bg-secondary/50 transition-colors duration-200 cursor-pointer"
           >
             <span>{isOpen ? 'Ocultar tutor IA' : 'Explícame esta pregunta con IA'}</span>
           </button>
@@ -134,7 +134,7 @@ export function AiTutorChat(props: AiTutorChatProps) {
       )}
 
       {isOpen && (
-        <div className="rounded-xl border border-indigo-200 bg-indigo-50/40 p-4 space-y-3">
+        <div className="rounded-xl border border-secondary bg-muted/40 p-4 space-y-3">
           <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
             {messages.length === 0 && !isStreaming && props.mode === 'subject' && (
               <p className="text-sm text-slate-500 italic">
@@ -147,7 +147,7 @@ export function AiTutorChat(props: AiTutorChatProps) {
                 key={`${msg.role}-${index}`}
                 className={`rounded-xl px-3.5 py-2.5 text-sm ${
                   msg.role === 'user'
-                    ? 'bg-indigo-600 text-white ml-6'
+                    ? 'bg-primary text-white ml-6'
                     : 'bg-white border border-slate-200 text-slate-800 mr-2 shadow-xs'
                 }`}
               >
@@ -160,11 +160,11 @@ export function AiTutorChat(props: AiTutorChatProps) {
             ))}
 
             {isStreaming && (
-              <div className="rounded-xl px-3.5 py-2.5 text-sm bg-white border border-indigo-200 text-slate-800 mr-2 shadow-xs">
+              <div className="rounded-xl px-3.5 py-2.5 text-sm bg-white border border-secondary text-slate-800 mr-2 shadow-xs">
                 {streamingContent ? (
                   <div>
                     <MarkdownRenderer content={streamingContent} />
-                    <span className="inline-block w-2 h-4 ml-1 align-middle bg-indigo-500 animate-pulse" />
+                    <span className="inline-block w-2 h-4 ml-1 align-middle bg-primary animate-pulse" />
                   </div>
                 ) : (
                   <p className="text-slate-500 italic animate-pulse">
@@ -188,12 +188,12 @@ export function AiTutorChat(props: AiTutorChatProps) {
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={placeholder}
               disabled={isStreaming}
-              className="flex-1 min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
+              className="flex-1 min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-60"
             />
             <button
               type="submit"
               disabled={isStreaming || inputValue.trim().length === 0}
-              className="shrink-0 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer"
+              className="shrink-0 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors duration-200 cursor-pointer"
             >
               Enviar
             </button>

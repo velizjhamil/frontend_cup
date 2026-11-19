@@ -221,7 +221,7 @@ export default function Simulation() {
   // pantalla de inicio acá haría parpadear "Iniciar" sobre un examen en curso.
   if (!isHydrated) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+      <div className="min-h-full bg-background flex items-center justify-center p-4">
         <p className="text-sm text-slate-600">Restaurando simulacro…</p>
       </div>
     );
@@ -231,11 +231,11 @@ export default function Simulation() {
     const selectedSubjectName = getSubjectNameByCode(selectedSubject);
 
     return (
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
+      <div className="min-h-full bg-background flex flex-col items-center justify-center p-4">
         <div className="max-w-lg w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-blue-600 p-6 text-center">
+          <div className="bg-primary p-6 text-center">
             <h1 className="text-2xl font-bold text-white">Configurar examen</h1>
-            <p className="text-blue-100 text-sm mt-1">
+            <p className="text-primary-foreground/80 text-sm mt-1">
               Elegí el Simulacro Oficial o una Práctica Personalizada
             </p>
           </div>
@@ -245,9 +245,9 @@ export default function Simulation() {
               <button
                 type="button"
                 onClick={() => setSelectedMode('official')}
-                className={`rounded-lg py-2 px-3 text-sm font-semibold transition-colors ${
+                className={`rounded-lg py-2 px-3 text-sm font-semibold transition-colors duration-200 ${
                   selectedMode === 'official'
-                    ? 'bg-white text-blue-600 shadow-sm'
+                    ? 'bg-white text-primary shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -256,9 +256,9 @@ export default function Simulation() {
               <button
                 type="button"
                 onClick={() => setSelectedMode('practice')}
-                className={`rounded-lg py-2 px-3 text-sm font-semibold transition-colors ${
+                className={`rounded-lg py-2 px-3 text-sm font-semibold transition-colors duration-200 ${
                   selectedMode === 'practice'
-                    ? 'bg-white text-blue-600 shadow-sm'
+                    ? 'bg-white text-primary shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -308,7 +308,7 @@ export default function Simulation() {
                   <select
                     value={selectedSubject}
                     onChange={(event) => setSelectedSubject(event.target.value as SubjectCode)}
-                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500"
+                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-primary focus:ring-4 focus:ring-secondary/50"
                   >
                     {SUBJECT_CATALOG.map((subject) => (
                       <option key={subject.code} value={subject.code}>
@@ -330,9 +330,9 @@ export default function Simulation() {
                           key={count}
                           type="button"
                           onClick={() => setSelectedCount(count)}
-                          className={`rounded-xl border py-2.5 px-3 text-sm font-semibold transition-colors ${
+                          className={`rounded-xl border py-2.5 px-3 text-sm font-semibold transition-colors duration-200 ${
                             active
-                              ? 'border-blue-600 bg-blue-50 text-blue-700'
+                              ? 'border-primary bg-muted text-primary'
                               : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                           }`}
                         >
@@ -356,7 +356,7 @@ export default function Simulation() {
                     onChange={(event) =>
                       setSelectedDifficulty(event.target.value as '' | ExamDifficulty)
                     }
-                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500"
+                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-primary focus:ring-4 focus:ring-secondary/50"
                   >
                     {DIFFICULTY_OPTIONS.map((opt) => (
                       <option key={opt.label} value={opt.value}>
@@ -405,11 +405,11 @@ export default function Simulation() {
 
   if (status === 'finished') {
     return (
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
+      <div className="min-h-full bg-background flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-blue-600 p-6 text-center">
+          <div className="bg-primary p-6 text-center">
             <h1 className="text-2xl font-bold text-white">Simulacro terminado</h1>
-            <p className="text-blue-100 text-sm mt-1">
+            <p className="text-primary-foreground/80 text-sm mt-1">
               {wasQueuedOffline
                 ? 'Guardado para enviar cuando vuelva la conexión'
                 : isSubmittingResult
@@ -450,7 +450,7 @@ export default function Simulation() {
                     resetSimulation();
                     navigate('/dashboard');
                   }}
-                  className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                  className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200"
                 >
                   Ir al Dashboard
                 </button>
@@ -478,7 +478,7 @@ export default function Simulation() {
                 type="button"
                 onClick={() => void handleRestart()}
                 disabled={isSubmittingResult}
-                className="w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors hover:bg-slate-50 disabled:opacity-50"
+                className="w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors duration-200 hover:bg-slate-50 disabled:opacity-50"
               >
                 Descartar y volver a empezar
               </button>
@@ -500,21 +500,23 @@ export default function Simulation() {
   if (!question) return null;
 
   return (
-    <div className="min-h-screen bg-slate-100 pb-10">
-      <header className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-200">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">
+    <div className="min-h-full bg-background pb-10">
+      <header className="sticky top-0 z-10 bg-card/95 backdrop-blur border-b border-secondary/60 shadow-sm">
+        <div className="max-w-2xl mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-primary truncate">
               {examTitle}
             </p>
             <p
-              className={`font-mono text-2xl font-bold tabular-nums ${
-                isLowTime ? 'text-red-600' : 'text-slate-900'
+              role="timer"
+              aria-live="off"
+              className={`font-mono text-2xl sm:text-3xl font-bold tabular-nums leading-tight ${
+                isLowTime ? 'text-red-600' : 'text-primary'
               }`}
             >
               {formatTime(timeRemaining)}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Respondidas {answeredCount} de {questions.length}
             </p>
           </div>
@@ -522,15 +524,15 @@ export default function Simulation() {
           <button
             type="button"
             onClick={() => setIsConfirmingFinish(true)}
-            className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+            className="shrink-0 bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors duration-200"
           >
             Finalizar
           </button>
         </div>
 
-        <div className="h-1 bg-slate-200">
+        <div className="h-1 bg-muted">
           <div
-            className="h-1 bg-blue-600 transition-all"
+            className="h-1 bg-primary transition-all"
             style={{ width: `${(answeredCount / questions.length) * 100}%` }}
           />
         </div>
@@ -543,7 +545,7 @@ export default function Simulation() {
               Pregunta {safeIndex + 1} de {questions.length}
             </span>
             <div className="flex items-center gap-1.5">
-              <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
+              <span className="px-2 py-0.5 rounded-full bg-muted text-primary font-medium">
                 {getSubjectLabel(question)}
               </span>
               {question.topic && (
@@ -571,8 +573,10 @@ export default function Simulation() {
               return (
                 <label
                   key={option.key}
-                  className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
-                    isChecked ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:bg-slate-50'
+                  className={`flex items-start gap-3 rounded-xl border-2 p-3.5 cursor-pointer transition-colors duration-200 ${
+                    isChecked
+                      ? 'border-primary bg-muted'
+                      : 'border-secondary/60 hover:border-secondary hover:bg-muted/50'
                   }`}
                 >
                   <input
@@ -581,9 +585,9 @@ export default function Simulation() {
                     value={option.key}
                     checked={isChecked}
                     onChange={() => answerQuestion(question.id, option.key)}
-                    className="mt-1 accent-blue-600"
+                    className="mt-1 h-4 w-4 shrink-0 accent-primary"
                   />
-                  <div className="flex-1 min-w-0 text-sm text-slate-800">
+                  <div className="flex-1 min-w-0 break-words text-base sm:text-sm leading-relaxed text-slate-800">
                     <strong className="mr-2">{option.key}</strong>
                     <MarkdownRenderer content={option.text} variant="inline" />
                   </div>
@@ -598,7 +602,7 @@ export default function Simulation() {
             type="button"
             onClick={() => setCurrentIndex(Math.max(safeIndex - 1, 0))}
             disabled={safeIndex === 0}
-            className="flex-1 bg-white border border-slate-300 text-slate-700 font-semibold py-3 rounded-xl transition-colors hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 bg-white border border-slate-300 text-slate-700 font-semibold py-3 rounded-xl transition-colors duration-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Anterior
           </button>
@@ -606,13 +610,13 @@ export default function Simulation() {
             type="button"
             onClick={() => setCurrentIndex(Math.min(safeIndex + 1, questions.length - 1))}
             disabled={safeIndex === questions.length - 1}
-            className="flex-1 bg-white border border-slate-300 text-slate-700 font-semibold py-3 rounded-xl transition-colors hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 bg-white border border-slate-300 text-slate-700 font-semibold py-3 rounded-xl transition-colors duration-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Siguiente
           </button>
         </div>
 
-        <nav aria-label="Mapa de preguntas" className="grid grid-cols-8 gap-1.5">
+        <nav aria-label="Mapa de preguntas" className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-1.5">
           {questions.map((item, index) => {
             const isAnswered = answers[item.id] !== undefined;
             const isCurrent = index === safeIndex;
@@ -624,12 +628,12 @@ export default function Simulation() {
                 onClick={() => setCurrentIndex(index)}
                 aria-label={`Ir a la pregunta ${index + 1}${isAnswered ? ' (respondida)' : ''}`}
                 aria-current={isCurrent ? 'true' : undefined}
-                className={`h-8 rounded-md text-xs font-semibold border transition-colors ${
-                  isCurrent ? 'ring-2 ring-blue-500 ring-offset-1' : ''
+                className={`h-9 rounded-lg text-xs font-semibold border transition-colors duration-200 ${
+                  isCurrent ? 'ring-2 ring-primary ring-offset-1' : ''
                 } ${
                   isAnswered
-                    ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
+                    ? 'bg-primary border-primary text-primary-foreground'
+                    : 'bg-card border-secondary text-slate-600 hover:bg-muted'
                 }`}
               >
                 {index + 1}
@@ -663,7 +667,7 @@ export default function Simulation() {
               <button
                 type="button"
                 onClick={() => setIsConfirmingFinish(false)}
-                className="w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 rounded-xl transition-colors hover:bg-slate-50"
+                className="w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 rounded-xl transition-colors duration-200 hover:bg-slate-50"
               >
                 Seguir rindiendo
               </button>

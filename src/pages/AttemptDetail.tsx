@@ -57,7 +57,7 @@ export default function AttemptDetail() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
+      <div className="min-h-full bg-background flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 text-center space-y-4">
           <h1 className="text-xl font-bold text-slate-900">Detalle disponible con tu cuenta</h1>
           <p className="text-sm text-slate-600">
@@ -73,7 +73,7 @@ export default function AttemptDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+      <div className="min-h-full bg-background flex items-center justify-center p-4">
         <p className="text-sm text-slate-600 bg-white rounded-xl shadow px-5 py-4">
           Cargando revisión del simulacro…
         </p>
@@ -83,7 +83,7 @@ export default function AttemptDetail() {
 
   if (error || !detail) {
     return (
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
+      <div className="min-h-full bg-background flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 text-center space-y-4">
           <h1 className="text-xl font-bold text-slate-900">No pudimos abrir este intento</h1>
           <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-3">
@@ -96,7 +96,7 @@ export default function AttemptDetail() {
             <button
               type="button"
               onClick={() => navigate('/history')}
-              className="w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors hover:bg-slate-50"
+              className="w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors duration-200 hover:bg-slate-50"
             >
               Volver al historial
             </button>
@@ -113,7 +113,7 @@ export default function AttemptDetail() {
       secondaryAction={
         <Link
           to="/history"
-          className="block text-center w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors hover:bg-slate-50"
+          className="block text-center w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors duration-200 hover:bg-slate-50"
         >
           Volver al historial
         </Link>

@@ -1,13 +1,41 @@
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
 import type { AttemptHistoryItem } from '../types/attempt';
+
+// Hex on purpose: Recharts writes these as SVG presentation attributes, where
+// `var(--primary)` is not reliably resolved. Keep in sync with index.css tokens.
+const CHART_COLORS = {
+  line: '#0E2F76', // --primary
+  area: '#AAC0E1', // --secondary
+  grid: '#E2E8F0', // slate-200: guía horizontal apenas visible
+  axis: '#64748B', // slate-500
+} as const;
+
+type TooltipPayloadEntry = { value?: number | string };
+
+type ChartTooltipProps = {
+  active?: boolean;
+  label?: string | number;
+  payload?: readonly TooltipPayloadEntry[];
+};
+
+/** Tooltip compacto: fecha arriba, porcentaje destacado, sin bordes extra. */
+function ChartTooltip({ active, label, payload }: ChartTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null;
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-md">
+      <p className="text-slate-500">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold text-primary tabular-nums">{payload[0]?.value}% aciertos</p>
+    </div>
+  );
+}
 
 type AttemptHistoryChartProps = {
   data: AttemptHistoryItem[];
@@ -32,7 +60,7 @@ function formatShortDate(iso: string): string {
 export function AttemptHistoryChart({ data }: AttemptHistoryChartProps) {
   if (data.length === 0) {
     return (
-      <p className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl p-4">
+      <p className="rounded-xl bg-muted px-4 py-3 text-sm text-slate-600">
         Todavía no tenés simulacros registrados para graficar tu progreso.
       </p>
     );
@@ -47,25 +75,47 @@ export function AttemptHistoryChart({ data }: AttemptHistoryChartProps) {
     }));
 
   return (
-    <div className="h-56 w-full">
+    <div className="h-60 w-full md:h-72">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={points} margin={{ top: 8, right: 12, bottom: 0, left: -16 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748b' }} />
-          <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
-          <Tooltip
-            formatter={(value) => [`${value}%`, 'Porcentaje']}
-            labelFormatter={(label) => `Fecha: ${label}`}
+        <AreaChart data={points} margin={{ top: 12, right: 8, bottom: 4, left: -12 }}>
+          <defs>
+            <linearGradient id="attempt-progress-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={CHART_COLORS.area} stopOpacity={0.55} />
+              <stop offset="100%" stopColor={CHART_COLORS.area} stopOpacity={0.05} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid vertical={false} stroke={CHART_COLORS.grid} />
+          <XAxis
+            dataKey="label"
+            axisLine={false}
+            tickLine={false}
+            tickMargin={8}
+            minTickGap={16}
+            tick={{ fontSize: 11, fill: CHART_COLORS.axis }}
           />
-          <Line
+          <YAxis
+            domain={[0, 100]}
+            ticks={[0, 25, 50, 75, 100]}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(value: number) => `${value}%`}
+            tick={{ fontSize: 11, fill: CHART_COLORS.axis }}
+          />
+          <Tooltip
+            content={<ChartTooltip />}
+            cursor={{ stroke: CHART_COLORS.area, strokeWidth: 1 }}
+          />
+          <Area
             type="monotone"
             dataKey="percentage"
-            stroke="#2563eb"
+            stroke={CHART_COLORS.line}
             strokeWidth={2}
-            dot
+            fill="url(#attempt-progress-fill)"
+            dot={points.length <= 12 ? { r: 2.5, fill: CHART_COLORS.line, strokeWidth: 0 } : false}
+            activeDot={{ r: 4.5, fill: CHART_COLORS.line, stroke: '#FFFFFF', strokeWidth: 2 }}
             isAnimationActive={false}
           />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );

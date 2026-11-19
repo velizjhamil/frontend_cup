@@ -1,19 +1,105 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Database,
+  Lock,
+  PlayCircle,
+  RefreshCw,
+  SlidersHorizontal,
+  Sparkles,
+  Target,
+  TrendingUp,
+  type LucideIcon,
+} from 'lucide-react';
 import { fetchQuestions, getAttemptsHistory, getStudyRecommendations, getWeakPoints } from '../api/client';
 import { AttemptHistoryChart } from '../components/AttemptHistoryChart';
-import { Button } from '../components/Button';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
-import { getSessionUser, signOut, useSession } from '../lib/auth-client';
+import { getSessionUser, useSession } from '../lib/auth-client';
 import { db } from '../lib/db';
 import { useExamStore } from '../store/useExamStore';
 import { useGuestStore } from '../store/useGuestStore';
 import { useSimulationStore } from '../store/useSimulationStore';
 import type { AttemptHistoryItem, RecommendationsData, WeakPointsData } from '../types/attempt';
 
+/** Superficie base de todas las tarjetas: blanca, borde sutil y sombra mínima. */
+const CARD_CLASSES =
+  'rounded-2xl border border-slate-200/80 bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)]';
+
+const PRIMARY_CTA_CLASSES =
+  'inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-colors duration-200 hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-secondary disabled:cursor-not-allowed disabled:opacity-60';
+
+const SUBTLE_BUTTON_CLASSES =
+  'inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-primary transition-colors duration-200 hover:border-secondary hover:bg-muted focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-secondary/60 disabled:cursor-not-allowed disabled:opacity-60';
+
+const ALERT_CLASSES = 'rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700';
+
 function formatLastSynced(timestamp: number | null): string {
   if (!timestamp) return 'Nunca';
-  return new Date(timestamp).toLocaleString('es-BO');
+  return new Date(timestamp).toLocaleString('es-BO', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+/**
+ * Barras de error en tonos ámbar/coral suaves: comunican "a reforzar" sin el
+ * rojo saturado de alarma. El texto del porcentaje va en un tono oscuro
+ * aparte para mantener contraste AA.
+ */
+function errorBarClass(errorRate: number): string {
+  if (errorRate >= 70) return 'bg-orange-400/80';
+  if (errorRate >= 40) return 'bg-amber-400/80';
+  return 'bg-amber-300/80';
+}
+
+type KpiCardProps = {
+  icon: LucideIcon;
+  label: string;
+  value: ReactNode;
+  hint?: ReactNode;
+  action?: ReactNode;
+};
+
+function KpiCard({ icon: Icon, label, value, hint, action }: KpiCardProps) {
+  return (
+    <div className={`${CARD_CLASSES} flex flex-col gap-3 p-4`}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-primary">
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </span>
+      </div>
+      <p className="text-2xl font-bold tracking-tight text-primary tabular-nums">{value}</p>
+      {(hint || action) && (
+        <div className="mt-auto flex items-center justify-between gap-2">
+          {hint && <p className="min-w-0 truncate text-xs text-muted-foreground">{hint}</p>}
+          {action}
+        </div>
+      )}
+    </div>
+  );
+}
+
+type SectionHeaderProps = {
+  title: string;
+  description: string;
+  aside?: ReactNode;
+};
+
+function SectionHeader({ title, description, aside }: SectionHeaderProps) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+      </div>
+      {aside}
+    </div>
+  );
 }
 
 /**
@@ -31,10 +117,10 @@ export default function Dashboard() {
   const user = getSessionUser(session);
   const userId = user?.id ?? null;
   const isGuest = useGuestStore((state) => state.isGuest);
-  const leaveGuest = useGuestStore((state) => state.leaveGuest);
 
   const { isSyncing, lastSynced, questionCount, error, syncBank, loadLocalCount } = useExamStore();
   const startSimulation = useSimulationStore((state) => state.startSimulation);
+  const isSimulationRunning = useSimulationStore((state) => state.status === 'running');
 
   const [weakPoints, setWeakPoints] = useState<WeakPointsData | null>(null);
   const [isLoadingWeakPoints, setIsLoadingWeakPoints] = useState(false);
@@ -121,18 +207,6 @@ export default function Dashboard() {
     };
   }, [userId]);
 
-  const handleSignOut = async () => {
-    if (user !== null) {
-      try {
-        await signOut();
-      } catch (err) {
-        console.error('[auth] Error al cerrar sesión:', err);
-      }
-    }
-    leaveGuest();
-    navigate('/');
-  };
-
   const handleRetryWeakPoints = async () => {
     if (!weakPoints || weakPoints.failedQuestionIds.length === 0 || isStartingWeakRetry) {
       return;
@@ -182,272 +256,298 @@ export default function Dashboard() {
     }
   };
 
-  const greeting = user?.name ? `Hola, ${user.name}` : 'Bienvenido, Invitado';
-  const subtitle = user?.email ?? 'Tus intentos se guardan solo en este dispositivo.';
+
+  const firstName = user?.name?.trim().split(/\s+/)[0];
+  const greeting = firstName ? `Hola, ${firstName}` : 'Hola, Invitado';
+  const subtitle = user
+    ? 'Este es tu resumen de preparación para el CUP.'
+    : 'Tus intentos se guardan solo en este dispositivo.';
+  const hasBank = questionCount > 0;
+  const averagePercentage =
+    attemptsHistory && attemptsHistory.length > 0
+      ? `${(
+          attemptsHistory.reduce((sum, item) => sum + item.percentage, 0) / attemptsHistory.length
+        ).toFixed(1)}%`
+      : '—';
+  const topicsToReinforce = weakPoints?.failedQuestionIds.length ?? 0;
+  const accountOnlyHint = (
+    <span className="inline-flex items-center gap-1">
+      <Lock className="h-3 w-3" aria-hidden="true" /> Requiere cuenta
+    </span>
+  );
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4 py-8">
-      <div className="max-w-lg w-full space-y-5">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-blue-600 p-6">
-            <h1 className="text-xl font-bold text-white">{greeting}</h1>
-            <p className="text-blue-100 text-sm mt-1">{subtitle}</p>
+    <div className="min-h-full bg-background">
+      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
+        {/* 1. Bienvenida + CTA principal */}
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="truncate text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+              {greeting}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
           </div>
 
-          <div className="p-6">
-            {isGuest && !user && (
-              <div className="mb-4 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                Estás como invitado.{' '}
-                <Link to="/login" className="font-medium underline">
-                  Creá una cuenta
-                </Link>{' '}
-                para no perder tu historial ni tus estadísticas.
-              </div>
-            )}
-
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6 text-sm text-slate-700">
-              <p className="flex justify-between">
-                <span>Preguntas en el dispositivo</span>
-                <strong>{questionCount}</strong>
-              </p>
-              <p className="flex justify-between mt-1">
-                <span>Última sincronización</span>
-                <strong>{formatLastSynced(lastSynced)}</strong>
-              </p>
-            </div>
-
-            {error && (
-              <p className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
-                {error}
-              </p>
-            )}
-
-            {questionCount > 0 ? (
-              <div className="space-y-2.5">
-                <Link
-                  to="/simulation?mode=official"
-                  className="block text-center w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-md"
-                >
-                  Simulacro Oficial CUP (40 preg · 60 min)
-                </Link>
-                <Link
-                  to="/simulation?mode=practice"
-                  className="block text-center w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm"
-                >
-                  Práctica Personalizada por materia
-                </Link>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-3">
-                Descargá el banco para poder rendir un simulacro.
-              </p>
-            )}
-
-            <Button
-              type="button"
-              className="mt-3"
-              onClick={() => void syncBank()}
-              disabled={isSyncing}
-            >
-              {isSyncing ? 'Sincronizando…' : 'Descargar banco de preguntas'}
-            </Button>
-
-            <Link
-              to="/history"
-              className="mt-3 block text-center w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-3 px-4 rounded-xl transition-colors"
-            >
-              Ver mi historial de simulacros
+          {isSimulationRunning ? (
+            <Link to="/simulation" className={`${PRIMARY_CTA_CLASSES} shrink-0`}>
+              <PlayCircle className="h-5 w-5" aria-hidden="true" />
+              Continuar simulacro en curso
             </Link>
-
-            <Link
-              to="/tutor"
-              className="mt-3 block text-center w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold py-3 px-4 rounded-xl transition-colors"
-            >
-              Tutor IA por materia
+          ) : hasBank ? (
+            <Link to="/simulation?mode=official" className={`${PRIMARY_CTA_CLASSES} shrink-0`}>
+              <PlayCircle className="h-5 w-5" aria-hidden="true" />
+              Simulacro Oficial CUP
+              <span className="font-normal text-secondary">(40 preg · 60 min)</span>
             </Link>
-
+          ) : (
             <button
               type="button"
-              onClick={() => void handleSignOut()}
-              className="mt-3 w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors hover:bg-slate-50"
+              onClick={() => void syncBank()}
+              disabled={isSyncing}
+              className={`${PRIMARY_CTA_CLASSES} shrink-0`}
             >
-              {user ? 'Cerrar sesión' : 'Salir del modo invitado'}
+              <Database className="h-5 w-5" aria-hidden="true" />
+              {isSyncing ? 'Descargando banco…' : 'Descargar banco para empezar'}
             </button>
+          )}
+        </header>
+
+        {isGuest && !user && (
+          <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+            <p>Estás como invitado: tu historial y tus estadísticas no se guardan en la nube.</p>
+            <Link to="/login" className="shrink-0 font-semibold underline underline-offset-2">
+              Crear una cuenta
+            </Link>
           </div>
-        </div>
+        )}
 
-        {user && (
-          <section className="bg-white rounded-2xl shadow-xl p-6 space-y-4">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">Mis Puntos Débiles</h2>
-                <p className="text-xs text-slate-500">
-                  Temas y preguntas con mayor tasa de error en tus simulacros
-                </p>
-              </div>
-              {weakPoints && weakPoints.totalWrongAnswers > 0 && (
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                  {weakPoints.failedQuestionIds.length} a reforzar
-                </span>
+        {/* 2. KPIs */}
+        <section aria-label="Indicadores" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <KpiCard
+            icon={TrendingUp}
+            label="Promedio de aciertos"
+            value={user ? (isLoadingHistory ? '…' : averagePercentage) : '—'}
+            hint={user ? 'En todos tus simulacros' : accountOnlyHint}
+          />
+          <KpiCard
+            icon={CheckCircle2}
+            label="Simulacros realizados"
+            value={user ? (isLoadingHistory ? '…' : (attemptsHistory?.length ?? 0)) : '—'}
+            hint={user ? 'Guardados en tu cuenta' : accountOnlyHint}
+          />
+          <KpiCard
+            icon={Target}
+            label="Temas a reforzar"
+            value={user ? (isLoadingWeakPoints ? '…' : topicsToReinforce) : '—'}
+            hint={
+              user
+                ? topicsToReinforce > 0
+                  ? 'Preguntas falladas para repasar'
+                  : 'Sin errores pendientes'
+                : accountOnlyHint
+            }
+          />
+          <KpiCard
+            icon={Database}
+            label="Banco offline"
+            value={
+              <>
+                {questionCount}
+                <span className="ml-1 text-sm font-medium text-muted-foreground">preguntas</span>
+              </>
+            }
+            hint={
+              error ? (
+                <span className="text-rose-700">{error}</span>
+              ) : (
+                `Sincronizado: ${formatLastSynced(lastSynced)}`
+              )
+            }
+            action={
+              <button
+                type="button"
+                onClick={() => void syncBank()}
+                disabled={isSyncing}
+                className={`${SUBTLE_BUTTON_CLASSES} shrink-0`}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} aria-hidden="true" />
+                {isSyncing ? 'Sincronizando' : hasBank ? 'Actualizar' : 'Descargar'}
+              </button>
+            }
+          />
+        </section>
+
+        {/* 3. Grilla principal */}
+        {user ? (
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+            <section className={`${CARD_CLASSES} space-y-5 p-5 md:p-6 lg:col-span-7`}>
+              <SectionHeader
+                title="Mi progreso"
+                description="Porcentaje de aciertos por simulacro, del más antiguo al más reciente"
+              />
+              {isLoadingHistory && (
+                <p className="text-sm text-muted-foreground">Cargando tu historial de simulacros…</p>
               )}
-            </div>
+              {historyError && <p className={ALERT_CLASSES}>{historyError}</p>}
+              {!isLoadingHistory && !historyError && <AttemptHistoryChart data={attemptsHistory ?? []} />}
+            </section>
 
-            {isLoadingWeakPoints && (
-              <p className="text-sm text-slate-500">Analizando tu historial de respuestas…</p>
-            )}
+            <section className={`${CARD_CLASSES} space-y-5 p-5 md:p-6 lg:col-span-5`}>
+              <SectionHeader
+                title="Mis Puntos Débiles"
+                description="Temas con mayor tasa de error en tus simulacros"
+                aside={
+                  topicsToReinforce > 0 ? (
+                    <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+                      {topicsToReinforce} a reforzar
+                    </span>
+                  ) : undefined
+                }
+              />
 
-            {weakPointsError && (
-              <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-3">
-                {weakPointsError}
-              </p>
-            )}
+              {isLoadingWeakPoints && (
+                <p className="text-sm text-muted-foreground">Analizando tu historial de respuestas…</p>
+              )}
+              {weakPointsError && <p className={ALERT_CLASSES}>{weakPointsError}</p>}
 
-            {!isLoadingWeakPoints && !weakPointsError && weakPoints && weakPoints.byTopic.length === 0 && (
-              <p className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl p-4">
-                {weakPoints.totalAnswersAnalyzed === 0
-                  ? 'Todavía no tenemos simulacros guardados en tu cuenta para detectar puntos débiles.'
-                  : '¡Impecable! No registrás errores en tus intentos guardados.'}
-              </p>
-            )}
+              {!isLoadingWeakPoints && !weakPointsError && weakPoints && weakPoints.byTopic.length === 0 && (
+                <p className="rounded-xl bg-muted px-4 py-3 text-sm text-slate-600">
+                  {weakPoints.totalAnswersAnalyzed === 0
+                    ? 'Todavía no hay simulacros guardados en tu cuenta para detectar puntos débiles.'
+                    : '¡Impecable! No registrás errores en tus intentos guardados.'}
+                </p>
+              )}
 
-            {!isLoadingWeakPoints && weakPoints && weakPoints.byTopic.length > 0 && (
-              <div className="space-y-4">
-                <div className="space-y-2.5">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Temas con mayor % de error
-                  </h3>
-                  {weakPoints.byTopic.slice(0, 5).map((topicItem) => (
-                    <div key={`${topicItem.subjectCode}-${topicItem.topic}`} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm gap-2">
-                        <span className="font-medium text-slate-800 truncate">
-                          {topicItem.subjectName} · {topicItem.topic}
-                        </span>
-                        <span className="text-xs font-semibold text-rose-700 tabular-nums shrink-0">
-                          {topicItem.wrongCount}/{topicItem.totalSeen} fallos ({topicItem.errorRate}%)
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-rose-500"
-                          style={{ width: `${Math.min(topicItem.errorRate, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {weakPoints.byQuestion.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Preguntas más falladas
-                    </h3>
-                    <div className="space-y-2">
-                      {weakPoints.byQuestion.slice(0, 3).map((q) => (
-                        <div
-                          key={q.questionId}
-                          className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm space-y-1"
-                        >
-                          <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
-                            <span className="font-semibold text-slate-700">
-                              {q.subjectName} · {q.topic}
+              {!isLoadingWeakPoints && weakPoints && weakPoints.byTopic.length > 0 && (
+                <>
+                  <ul className="space-y-3.5">
+                    {weakPoints.byTopic.slice(0, 5).map((topicItem) => (
+                      <li key={`${topicItem.subjectCode}-${topicItem.topic}`} className="space-y-1.5">
+                        <div className="flex items-baseline justify-between gap-3 text-sm">
+                          <span className="min-w-0 truncate">
+                            <span className="font-medium text-slate-800">{topicItem.topic}</span>
+                            <span className="text-muted-foreground"> · {topicItem.subjectName}</span>
+                          </span>
+                          <span className="shrink-0 text-xs font-semibold text-orange-800 tabular-nums">
+                            {topicItem.errorRate}%
+                            <span className="ml-1 font-normal text-muted-foreground">
+                              ({topicItem.wrongCount}/{topicItem.totalSeen})
                             </span>
-                            <span className="font-semibold text-rose-700 tabular-nums">
-                              {q.wrongCount} {q.wrongCount === 1 ? 'error' : 'errores'} ({q.errorRate}%)
-                            </span>
-                          </div>
-                          <div className="text-slate-800 line-clamp-2">
-                            <MarkdownRenderer content={q.statementMd} variant="inline" />
-                          </div>
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                        <div
+                          className="h-1.5 overflow-hidden rounded-full bg-slate-100"
+                          role="meter"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={topicItem.errorRate}
+                          aria-label={`Error en ${topicItem.topic}`}
+                        >
+                          <div
+                            className={`h-full rounded-full ${errorBarClass(topicItem.errorRate)}`}
+                            style={{ width: `${Math.min(topicItem.errorRate, 100)}%` }}
+                          />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
 
-                {weakPoints.failedQuestionIds.length > 0 && (
+                  {weakPoints.byQuestion.length > 0 && (
+                    <div className="space-y-2">
+                      <h3 className="text-xs font-medium text-muted-foreground">Preguntas más falladas</h3>
+                      <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200/80">
+                        {weakPoints.byQuestion.slice(0, 3).map((q) => (
+                          <li key={q.questionId} className="space-y-1 px-3 py-2.5 text-sm">
+                            <div className="flex items-center justify-between gap-2 text-xs">
+                              <span className="truncate font-medium text-primary">
+                                {q.subjectName} · {q.topic}
+                              </span>
+                              <span className="shrink-0 text-orange-800 tabular-nums">
+                                {q.wrongCount} {q.wrongCount === 1 ? 'error' : 'errores'}
+                              </span>
+                            </div>
+                            <div className="line-clamp-2 text-slate-700">
+                              <MarkdownRenderer content={q.statementMd} variant="inline" />
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {weakPoints.failedQuestionIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => void handleRetryWeakPoints()}
+                      disabled={isStartingWeakRetry}
+                      className={`${PRIMARY_CTA_CLASSES} w-full`}
+                    >
+                      <Target className="h-4 w-4" aria-hidden="true" />
+                      {isStartingWeakRetry
+                        ? 'Preparando repaso…'
+                        : `Repasar mis puntos débiles (${weakPoints.failedQuestionIds.length})`}
+                    </button>
+                  )}
+                </>
+              )}
+
+              {!isLoadingWeakPoints && !weakPointsError && weakPoints && (
+                <div className="space-y-3 border-t border-slate-100 pt-4">
                   <button
                     type="button"
-                    onClick={() => void handleRetryWeakPoints()}
-                    disabled={isStartingWeakRetry}
-                    className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold py-3 px-4 rounded-xl shadow-sm transition-colors cursor-pointer"
+                    onClick={() => void handleAskRecommendations()}
+                    disabled={isLoadingRecommendations}
+                    className={`${SUBTLE_BUTTON_CLASSES} w-full py-2.5 text-sm`}
                   >
-                    {isStartingWeakRetry
-                      ? 'Preparando repaso...'
-                      : `Repasar mis puntos débiles (${weakPoints.failedQuestionIds.length})`}
+                    <Sparkles className="h-4 w-4" aria-hidden="true" />
+                    {isLoadingRecommendations ? 'Generando plan de estudio…' : 'Pedir plan de estudio a la IA'}
                   </button>
-                )}
-              </div>
-            )}
-
-            {!isLoadingWeakPoints && !weakPointsError && weakPoints && (
-              <div className="space-y-2.5 pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => void handleAskRecommendations()}
-                  disabled={isLoadingRecommendations}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold py-3 px-4 rounded-xl shadow-sm transition-colors cursor-pointer"
-                >
-                  {isLoadingRecommendations ? 'Generando plan de estudio…' : 'Pedir plan de estudio a la IA'}
-                </button>
-
-                {recommendationsError && (
-                  <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
-                    {recommendationsError}
-                  </p>
-                )}
-
-                {recommendations && (
-                  <div className="rounded-xl border border-indigo-200 bg-indigo-50/40 p-4">
-                    <MarkdownRenderer content={recommendations.recommendationsMd} />
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-        )}
-
-        {user && (
-          <section className="bg-white rounded-2xl shadow-xl p-6 space-y-4">
+                  {recommendationsError && <p className={ALERT_CLASSES}>{recommendationsError}</p>}
+                  {recommendations && (
+                    <div className="rounded-xl bg-muted/70 p-4 text-sm">
+                      <MarkdownRenderer content={recommendations.recommendationsMd} />
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+          </div>
+        ) : (
+          <section
+            className={`${CARD_CLASSES} flex flex-col items-start gap-3 p-6 sm:flex-row sm:items-center sm:justify-between`}
+          >
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Mi progreso</h2>
-              <p className="text-xs text-slate-500">
-                Evolución de tu porcentaje de aciertos a lo largo de tus simulacros
+              <h2 className="text-base font-semibold text-slate-900">Progreso y puntos débiles</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Con una cuenta ves tu evolución, los temas a reforzar y un plan de estudio con IA.
               </p>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-center">
-                <p className="text-2xl font-bold text-slate-900">{attemptsHistory?.length ?? 0}</p>
-                <p className="text-xs text-slate-500">Simulacros realizados</p>
-              </div>
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-center">
-                <p className="text-2xl font-bold text-slate-900">
-                  {attemptsHistory && attemptsHistory.length > 0
-                    ? `${(
-                        attemptsHistory.reduce((sum, item) => sum + item.percentage, 0) /
-                        attemptsHistory.length
-                      ).toFixed(1)}%`
-                    : '—'}
-                </p>
-                <p className="text-xs text-slate-500">Promedio general</p>
-              </div>
-            </div>
-
-            {isLoadingHistory && (
-              <p className="text-sm text-slate-500">Cargando tu historial de simulacros…</p>
-            )}
-
-            {historyError && (
-              <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-3">
-                {historyError}
-              </p>
-            )}
-
-            {!isLoadingHistory && !historyError && (
-              <AttemptHistoryChart data={attemptsHistory ?? []} />
-            )}
+            <Link to="/login" className={`${SUBTLE_BUTTON_CLASSES} shrink-0 px-4 py-2 text-sm`}>
+              Iniciar sesión
+            </Link>
           </section>
         )}
+
+        {/* 4. Acción rápida secundaria */}
+        <section className={`${CARD_CLASSES} flex flex-col gap-4 p-5 sm:flex-row sm:items-center`}>
+          <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-primary">
+            <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold text-slate-900">Práctica Personalizada por materia</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Elegí materia, cantidad de preguntas y dificultad para entrenar a tu ritmo.
+            </p>
+          </div>
+          {hasBank ? (
+            <Link to="/simulation?mode=practice" className={`${SUBTLE_BUTTON_CLASSES} shrink-0 px-4 py-2 text-sm`}>
+              Configurar práctica
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          ) : (
+            <p className="shrink-0 text-xs text-muted-foreground">Descargá el banco para practicar.</p>
+          )}
+        </section>
       </div>
     </div>
   );

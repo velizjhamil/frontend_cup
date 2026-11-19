@@ -19,17 +19,33 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="bg-blue-600 p-8 text-center">
-          <h1 className="text-3xl font-bold text-white">Simulacro CUP</h1>
-          <p className="text-blue-100 mt-2">FICCT · UAGRM</p>
+    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+      <section className="bg-primary text-primary-foreground px-6 py-10 md:w-1/2 md:flex md:flex-col md:justify-center md:px-12 lg:px-20">
+        <p className="text-xs font-semibold uppercase tracking-widest text-secondary">
+          FICCT · UAGRM
+        </p>
+        <h1 className="mt-2 text-4xl md:text-5xl font-bold leading-tight">Simulacro CUP</h1>
+        <p className="mt-4 text-primary-foreground/80 md:text-lg max-w-md">
+          Practicá Inglés, Computación, Matemáticas y Física con preguntas del examen de
+          admisión, y seguí tu progreso.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-2">
+          {['Inglés', 'Computación', 'Matemáticas', 'Física'].map((subject) => (
+            <span
+              key={subject}
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground"
+            >
+              {subject}
+            </span>
+          ))}
         </div>
+      </section>
 
-        <div className="p-6 space-y-3">
-          <p className="text-slate-600 text-sm text-center mb-4">
-            Practicá Inglés, Computación, Matemáticas y Física con preguntas del
-            examen de admisión, y seguí tu progreso.
+      <main className="flex-1 flex items-center justify-center p-4 py-8 md:p-8">
+        <div className="w-full max-w-md bg-card rounded-2xl shadow-xl border border-secondary/60 p-6 md:p-8 space-y-3">
+          <h2 className="text-2xl font-bold text-primary">Empezá a practicar</h2>
+          <p className="text-sm text-muted-foreground pb-2">
+            Entrá con tu cuenta o probá sin registrarte.
           </p>
 
           {user ? (
@@ -42,22 +58,18 @@ export default function Landing() {
             </Button>
           )}
 
-          <button
-            type="button"
-            onClick={startAsGuest}
-            className="w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors hover:bg-slate-50"
-          >
+          <Button type="button" variant="outline" onClick={startAsGuest}>
             Probar como invitado
-          </button>
+          </Button>
 
-          <p className="text-xs text-slate-500 text-center pt-2">
+          <p className="text-xs text-muted-foreground text-center pt-2">
             Como invitado tus intentos se guardan solo en este dispositivo.{' '}
-            <Link to="/login" className="text-blue-600 hover:underline">
+            <Link to="/login" className="text-primary font-semibold hover:underline">
               Crear una cuenta
             </Link>
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

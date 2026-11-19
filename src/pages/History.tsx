@@ -56,11 +56,11 @@ export default function History() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
+      <div className="min-h-full bg-background flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-blue-600 p-6 text-center">
+          <div className="bg-primary p-6 text-center">
             <h1 className="text-xl font-bold text-white">Historial de simulacros</h1>
-            <p className="text-blue-100 text-sm mt-1">Disponible con tu cuenta</p>
+            <p className="text-primary-foreground/80 text-sm mt-1">Disponible con tu cuenta</p>
           </div>
 
           <div className="p-6 space-y-4 text-center">
@@ -91,17 +91,17 @@ export default function History() {
       : 0;
 
   return (
-    <div className="min-h-screen bg-slate-100 pb-12">
+    <div className="min-h-full bg-background pb-12">
       <div className="max-w-3xl mx-auto px-4 pt-6 space-y-6">
         <section className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-blue-600 p-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="bg-primary p-6 flex flex-wrap items-center justify-between gap-4">
             <div>
               <h1 className="text-xl font-bold text-white">Mi historial de simulacros</h1>
-              <p className="text-blue-100 text-sm mt-0.5">{user.name || user.email}</p>
+              <p className="text-primary-foreground/80 text-sm mt-0.5">{user.name || user.email}</p>
             </div>
             <Link
               to="/dashboard"
-              className="text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 px-3.5 py-2 rounded-lg transition-colors"
+              className="text-sm font-medium text-white bg-primary-hover hover:bg-primary-hover px-3.5 py-2 rounded-lg transition-colors duration-200"
             >
               Volver al dashboard
             </Link>
@@ -170,7 +170,7 @@ export default function History() {
                       const passed = isPassedAttempt(item);
 
                       return (
-                        <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                        <tr key={item.id} className="hover:bg-slate-50 transition-colors duration-200">
                           <td className="py-3 px-4 text-slate-700 whitespace-nowrap">
                             {formatDate(item.createdAt)}
                           </td>
@@ -194,7 +194,7 @@ export default function History() {
                           <td className="py-3 px-4 text-right whitespace-nowrap">
                             <Link
                               to={`/history/${item.id}`}
-                              className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                              className="text-xs font-semibold text-primary hover:text-primary hover:underline"
                             >
                               Ver revisión
                             </Link>

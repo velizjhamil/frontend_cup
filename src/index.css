@@ -1,6 +1,59 @@
 @import "tailwindcss";
 
 /*
+ * Design tokens (shadcn-style): raw HSL channels, without `hsl()`, so they can be
+ * composed with alpha (`hsl(var(--primary) / 0.5)`). `@theme inline` below maps them
+ * to Tailwind colors, which enables `bg-primary`, `text-primary-foreground`,
+ * `border-secondary`, `ring-secondary/60`, etc.
+ *
+ * Contrast (WCAG):
+ * - white on primary (#0E2F76)             ~12.4:1 (AAA)
+ * - primary on secondary (#AAC0E1)         ~6.7:1  (AA)  -> secondary text is navy, never white
+ * - foreground on background (#F5FEFF)     >15:1
+ */
+:root {
+  --background: 186 100% 98%; /* #F5FEFF ice white */
+  --foreground: 222 47% 11%; /* near-black navy for body text */
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+
+  --primary: 221 79% 26%; /* #0E2F76 deep navy */
+  --primary-hover: 221 79% 20%; /* darker navy for hover/active */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 216 48% 77%; /* #AAC0E1 light blue */
+  --secondary-foreground: 221 79% 26%;
+
+  --muted: 216 52% 95%; /* very light tint of secondary for surfaces/badges */
+  --muted-foreground: 215 25% 35%;
+
+  --border: 216 48% 77%;
+  --ring: 216 48% 77%;
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-hover: hsl(var(--primary-hover));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-border: hsl(var(--border));
+  --color-ring: hsl(var(--ring));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/*
  * Estilos del contenido Markdown de las preguntas.
  * Tailwind resetea listas y márgenes, así que el Markdown necesita su propio
  * ritmo vertical mínimo. Se limita a `.markdown-body` para no tocar el resto.

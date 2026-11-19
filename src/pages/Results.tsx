@@ -28,7 +28,7 @@ export default function Results() {
 
   if (!activeResult) {
     return (
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
+      <div className="min-h-full bg-background flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 text-center space-y-4">
           <h1 className="text-xl font-bold text-slate-900">Todavía no hay resultados</h1>
           <p className="text-sm text-slate-600">

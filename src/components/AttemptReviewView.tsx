@@ -245,7 +245,7 @@ export function AttemptReviewView({
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 pb-12">
+    <div className="min-h-screen bg-background pb-12">
       <div className="max-w-2xl mx-auto px-4 pt-6 space-y-6">
         <section className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className={`p-6 text-center text-white ${isApproved ? 'bg-emerald-600' : 'bg-rose-600'}`}>
@@ -312,7 +312,7 @@ export function AttemptReviewView({
                   type="button"
                   onClick={() => void handleRetryErrors()}
                   disabled={isStartingRetry}
-                  className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold py-3 px-4 rounded-xl shadow-sm transition-colors cursor-pointer"
+                  className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold py-3 px-4 rounded-xl shadow-sm transition-colors duration-200 cursor-pointer"
                 >
                   {isStartingRetry
                     ? 'Preparando repaso...'
@@ -334,7 +334,7 @@ export function AttemptReviewView({
                 <button
                   type="button"
                   onClick={() => navigate('/dashboard')}
-                  className="w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors hover:bg-slate-50"
+                  className="w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors duration-200 hover:bg-slate-50"
                 >
                   Volver al dashboard
                 </button>

@@ -6,6 +6,11 @@ import { useGuestStore } from '../store/useGuestStore';
 
 type Mode = 'login' | 'register';
 
+// Soft secondary focus ring plus a navy border: the ring alone (#AAC0E1 on white)
+// is below the 3:1 non-text contrast, the primary border keeps focus visible.
+const INPUT_CLASSES =
+  'mt-1 w-full rounded-lg border border-secondary bg-card px-3 py-2.5 text-slate-900 outline-none transition-colors duration-200 focus:border-primary focus:ring-4 focus:ring-secondary/50';
+
 function formatAuthError(
   err: { message?: string | null; status?: number; statusText?: string },
   fallback: string,
@@ -84,102 +89,126 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="bg-blue-600 p-6 text-center">
-          <h1 className="text-2xl font-bold text-white">
-            {mode === 'login' ? 'Entrar' : 'Crear cuenta'}
-          </h1>
-          <p className="text-blue-100 mt-1">Simulacro CUP · FICCT</p>
-        </div>
+    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+      <aside className="bg-primary text-primary-foreground px-6 py-8 md:w-1/2 md:flex md:flex-col md:justify-center md:px-12 lg:px-20">
+        <p className="text-xs font-semibold uppercase tracking-widest text-secondary">
+          FICCT · UAGRM
+        </p>
+        <h1 className="mt-2 text-3xl md:text-4xl font-bold leading-tight">Simulacro CUP</h1>
+        <p className="mt-3 text-primary-foreground/80 md:text-lg max-w-md">
+          Prepará tu examen de admisión con preguntas reales y seguí tu progreso.
+        </p>
+        <ul className="mt-8 hidden md:block space-y-3 text-primary-foreground/90">
+          <li className="flex items-center gap-3">
+            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-secondary" />
+            Simulacros cronometrados como el examen oficial
+          </li>
+          <li className="flex items-center gap-3">
+            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-secondary" />
+            Tus puntos débiles por materia y tema
+          </li>
+          <li className="flex items-center gap-3">
+            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-secondary" />
+            Tutor IA para repasar cada pregunta
+          </li>
+        </ul>
+      </aside>
 
-        <form className="p-6 space-y-4" onSubmit={handleSubmit}>
-          {mode === 'register' && (
+      <main className="flex-1 flex items-center justify-center p-4 py-8 md:p-8">
+        <div className="w-full max-w-md bg-card rounded-2xl shadow-xl border border-secondary/60 p-6 md:p-8">
+          <h2 className="text-2xl font-bold text-primary">
+            {mode === 'login' ? 'Entrar' : 'Crear cuenta'}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {mode === 'login'
+              ? 'Ingresá con tu cuenta para guardar tu progreso.'
+              : 'Creá tu cuenta en menos de un minuto.'}
+          </p>
+
+          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+            {mode === 'register' && (
+              <label className="block">
+                <span className="text-sm font-medium text-slate-700">Nombre</span>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  required
+                  autoComplete="name"
+                  className={INPUT_CLASSES}
+                />
+              </label>
+            )}
+
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">Nombre</span>
+              <span className="text-sm font-medium text-slate-700">Email</span>
               <input
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 required
-                autoComplete="name"
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500"
+                autoComplete="email"
+                className={INPUT_CLASSES}
               />
             </label>
-          )}
 
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Email</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              autoComplete="email"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500"
-            />
-          </label>
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700">Contraseña</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                minLength={8}
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                className={INPUT_CLASSES}
+              />
+              {mode === 'register' && (
+                <span className="text-xs text-muted-foreground mt-1 block">
+                  Mínimo 8 caracteres.
+                </span>
+              )}
+            </label>
 
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Contraseña</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              minLength={8}
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500"
-            />
-            {mode === 'register' && (
-              <span className="text-xs text-slate-500 mt-1 block">
-                Mínimo 8 caracteres.
-              </span>
+            {error && (
+              <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
+                {error}
+              </p>
             )}
-          </label>
 
-          {error && (
-            <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
-              {error}
+            <Button type="submit" disabled={isSubmitting} className="text-base">
+              {isSubmitting
+                ? 'Enviando…'
+                : mode === 'login'
+                  ? 'Entrar'
+                  : 'Crear cuenta'}
+            </Button>
+
+            {googleEnabled && (
+              <Button type="button" variant="outline" onClick={() => void handleGoogle()}>
+                Continuar con Google
+              </Button>
+            )}
+
+            <p className="text-sm text-center text-slate-600">
+              {mode === 'login' ? '¿No tenés cuenta?' : '¿Ya tenés cuenta?'}{' '}
+              <button
+                type="button"
+                onClick={switchMode}
+                className="text-primary font-semibold hover:underline"
+              >
+                {mode === 'login' ? 'Registrate' : 'Entrá'}
+              </button>
             </p>
-          )}
 
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? 'Enviando…'
-              : mode === 'login'
-                ? 'Entrar'
-                : 'Crear cuenta'}
-          </Button>
-
-          {googleEnabled && (
-            <button
-              type="button"
-              onClick={() => void handleGoogle()}
-              className="w-full bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors hover:bg-slate-50"
-            >
-              Continuar con Google
-            </button>
-          )}
-
-          <p className="text-sm text-center text-slate-600">
-            {mode === 'login' ? '¿No tenés cuenta?' : '¿Ya tenés cuenta?'}{' '}
-            <button
-              type="button"
-              onClick={switchMode}
-              className="text-blue-600 font-medium hover:underline"
-            >
-              {mode === 'login' ? 'Registrate' : 'Entrá'}
-            </button>
-          </p>
-
-          <p className="text-xs text-center text-slate-500">
-            <Link to="/" className="hover:underline">
-              Volver al inicio
-            </Link>
-          </p>
-        </form>
-      </div>
+            <p className="text-xs text-center text-muted-foreground">
+              <Link to="/" className="hover:text-primary hover:underline transition-colors duration-200">
+                Volver al inicio
+              </Link>
+            </p>
+          </form>
+        </div>
+      </main>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
-import { NetworkStatus } from './components/NetworkStatus';
 import { syncPendingAttempts } from './lib/offlineSync';
 import { router } from './routes';
 
@@ -19,10 +18,7 @@ export default function App() {
     return () => window.removeEventListener('online', handleOnline);
   }, []);
 
-  return (
-    <>
-      <NetworkStatus />
-      <RouterProvider router={router} />
-    </>
-  );
+  // El aviso offline lo pinta cada layout (PublicLayout / AppLayout) para
+  // que dentro de la app empuje el header en vez de taparlo.
+  return <RouterProvider router={router} />;
 }

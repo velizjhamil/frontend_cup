@@ -20,12 +20,12 @@ export default function Tutor() {
   const [selected, setSelected] = useState<Subject | null>(null);
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col items-center p-4 py-8">
+    <div className="min-h-full bg-background flex flex-col items-center p-4 py-8">
       <div className="max-w-lg w-full space-y-5">
         <div className="bg-white rounded-2xl shadow-xl p-6 space-y-4">
           <div className="flex items-center justify-between gap-2">
             <h1 className="text-xl font-bold text-slate-900">Tutor IA por materia</h1>
-            <Link to="/dashboard" className="text-sm font-medium text-blue-700 hover:underline">
+            <Link to="/dashboard" className="text-sm font-medium text-primary hover:underline">
               Volver
             </Link>
           </div>
@@ -40,9 +40,9 @@ export default function Tutor() {
                 key={subject.code}
                 type="button"
                 onClick={() => setSelected(subject)}
-                className={`rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition-colors cursor-pointer ${
+                className={`rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer ${
                   selected?.code === subject.code
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                    ? 'border-primary bg-muted text-primary'
                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                 }`}
               >
