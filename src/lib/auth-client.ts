@@ -4,9 +4,9 @@ import { createAuthClient } from 'better-auth/react';
  * Cliente de Better Auth para React.
  *
  * En desarrollo las rutas `/api/*` pasan por el proxy de Vite hacia `:4000`
- * (ver vite.config.ts), así que el baseURL relativo evita CORS y las cookies
- * viajan al mismo origen. En producción se define `VITE_API_URL` con el
- * dominio de la API.
+ * (ver vite.config.ts) y en producción por el rewrite de `vercel.json` hacia
+ * Render: el mismo origen evita CORS y deja la cookie de sesión first-party.
+ * `VITE_API_URL` solo hace falta si la API vive en otro dominio sin proxy.
  */
 export const authClient = createAuthClient({
   baseURL: import.meta.env.VITE_API_URL || window.location.origin,

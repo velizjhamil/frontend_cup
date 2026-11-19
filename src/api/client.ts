@@ -11,8 +11,12 @@ import type { ChatRequestBody } from '../types/chat';
 import type { ApiError, Question, QuestionListResponse, QuestionQuery } from '../types/question';
 
 /**
- * En desarrollo las llamadas pasan por el proxy de Vite (`/api` → `:4000`),
- * por eso el default es el mismo origen. En producción se define VITE_API_URL.
+ * Por defecto todas las llamadas van al MISMO origen (`/api/...`):
+ * - en desarrollo, el proxy de Vite las manda a `:4000`;
+ * - en producción (Vercel), el rewrite de `vercel.json` las manda a Render.
+ * Así la cookie de sesión es first-party y no la bloquea el navegador.
+ * Definí `VITE_API_URL` solo si la API se sirve en otro dominio sin proxy
+ * (eso obliga a cookies cross-site y CORS con credenciales).
  */
 const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
